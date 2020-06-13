@@ -1,4 +1,3 @@
-#pragma warning(disable : 4996)
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -20,13 +19,14 @@ void setCoordinates() {
 		for (int j = 0; j < NUM_V + 1; j++) {
 
 			// u と v の値を 0.0 ～ 1.0 に正規化する
-			double u = 1.0 / NUM_U * i;
-			double v = 1.0 / NUM_V * j;
+			double u = 2.0 * PI / NUM_U * i;
+			double v = 2.0 * PI / NUM_U * j;
 
 			// 座標値の設定 ★ 以下の例ではz=0の平面になる
-			x[i][j] = u;
-			y[i][j] = v;
-			z[i][j] = 0;
+			x[i][j] = 2 * cos(u) + cos(v) * cos(u);
+			y[i][j] = 2 * sin(u) + cos(v) * sin(u);
+			z[i][j] = sin(v);
+
 		}
 	}
 }
@@ -37,25 +37,13 @@ void exportOBJ() {
 
 	// 出力用ファイルを開く
 	//---------------------------
-	fout = fopen(OUTPUT_FILENAME, "w");
-	if (fout == NULL) {
-		printf("Error: fopen\n");
-		exit(0);
-	}
-
-
-	// Visual Studio で上記ではうまくいかない場合次のものに置き換える
-/*
-	// 出力用ファイルを開く
-	//---------------------------
 	if(0 != fopen_s(&fout, OUTPUT_FILENAME, "w") ) {
 		printf("Error: fopen \n");
 		exit(0);
 	}
-*/
 
-// 頂点情報の出力
-//---------------------------
+	// 頂点情報の出力
+	//---------------------------
 	for (int i = 0; i < NUM_U + 1; i++) {
 		for (int j = 0; j < NUM_V + 1; j++) {
 			// 各頂点の座標値を出力する
@@ -64,11 +52,7 @@ void exportOBJ() {
 	}
 
 	// 面情報の出力
-	/*
-		★ 面情報を出力するには、以下のコメントアウトを外する
-	*/
 	//---------------------------
-	
 	for(int i = 0; i < NUM_U; i++) {
 		for(int j = 0; j < NUM_V; j++) {
 			// それぞれの格子に対して2つの三角形を出力する
