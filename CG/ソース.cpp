@@ -68,16 +68,16 @@ void exportOBJ() {
 		★ 面情報を出力するには、以下のコメントアウトを外する
 	*/
 	//---------------------------
-	/*
+	
 	for(int i = 0; i < NUM_U; i++) {
 		for(int j = 0; j < NUM_V; j++) {
 			// それぞれの格子に対して2つの三角形を出力する
 
 			// OBJ形式では頂点番号は1から始まる
-			int lb_index = // 左下の頂点番号を i,j,NUM_U,NUM_Vの値から計算する
-			int lt_index = // 左上の頂点番号の計算式
-			int rb_index = // 右下の頂点番号の計算式
-			int rt_index = // 右上の頂点番号の計算式
+			int lb_index = i * (NUM_V + 1) + (j + 1); // 左下の頂点番号を i,j,NUM_U,NUM_Vの値から計算する
+			int lt_index = i * (NUM_V + 1) + (j + 2);// 左上の頂点番号の計算式
+			int rb_index = (i + 1) * (NUM_V + 1) + (j + 1);// 右下の頂点番号の計算式
+			int rt_index = (i + 1) * (NUM_V + 1) + (j + 2);// 右上の頂点番号の計算式
 
 			// 三角形を構成する頂点番号を出力
 			fprintf(fout, "f %d %d %d\n", lb_index, rt_index, lt_index);
@@ -85,7 +85,7 @@ void exportOBJ() {
 
 		}
 	}
-	*/
+	
 
 	// 出力用ファイルを閉じる
 	//---------------------------
