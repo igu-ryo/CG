@@ -143,10 +143,15 @@ void display(void) {
 				double Id = 0; // 拡散反射光
 
 				// ★ここで Is および Id の値を計算する
-				Vector3d N = (viewPosition + t * ray) - sphere.center;
+				Vector3d N = (viewPosition + t * ray) - sphere.center; // (交点)-(円の中心)=(法線ベクトル)
 				N.normalize();
 				double cosAlpha = (-lightDirection * N);
 				Id = cosAlpha > 0 ? Iin * Kd * cosAlpha : 0;
+
+				double a = cosAlpha; // a=-L*NであるのでcosAlphaの値を利用
+				Vector3d R = lightDirection + 2 * a * N; // 反射方向
+				double cosGamma = -ray * R; // (視点方向)*(反射方向)
+				Is = cosAlpha > 0 && cosGamma > 0 ? Iin * Ks * pow(cosGamma, 5) : 0; // 「光源からの光が球に届いていて、かつ鏡面反射光が視点に届くとき」以外は0
 
 				double I = Id + Is + Ia;
 				double r = std::min(I * sphere.cR, 1.0); // 1.0 を超えないようにする
