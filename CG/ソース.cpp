@@ -143,6 +143,10 @@ void display(void) {
 				double Id = 0; // ŠgŽU”½ŽËŒõ
 
 				// š‚±‚±‚Å Is ‚¨‚æ‚Ñ Id ‚Ì’l‚ðŒvŽZ‚·‚é
+				Vector3d N = (viewPosition + t * ray) - sphere.center;
+				N.normalize();
+				double cosAlpha = (-lightDirection * N);
+				Id = cosAlpha > 0 ? Iin * Kd * cosAlpha : 0;
 
 				double I = Id + Is + Ia;
 				double r = std::min(I * sphere.cR, 1.0); // 1.0 ‚ð’´‚¦‚È‚¢‚æ‚¤‚É‚·‚é
