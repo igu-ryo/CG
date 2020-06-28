@@ -120,6 +120,11 @@ public:
 		double t = -1;
 		// ★ここで t の値を計算する
 		// ★ただしz座標が-3000より小さいなら交わらないものとする
+		double tmp = (y - p.y) / v.y; // p+tv=交点より、y座標についての方程式をtについて解く
+		if (p.z + tmp * v.z > -3000)
+		{
+			t = tmp;
+		}
 
 		return t;
 	}
@@ -127,8 +132,28 @@ public:
 	// x と z の値から床の色を返す（格子模様になるように）
 	Vector3d getColorVec(double x, double z) {
 		// ★ x, z の値によって(1.0, 1.0, 0.7)または(0.6, 0.6, 0.6)のどちらかの色を返すようにする
-
-		return Vector3d(0.6, 0.6, 0.6);
+		if (sin(x * acos(-1) / 100.0) > 0) // sin(x * acos(-1) / 100.0)の値の正負は周期100で反転する
+		{
+			if (sin(z * acos(-1) / 100.0) > 0)
+			{
+				return Vector3d(1.0, 1.0, 0.7);
+			}
+			else
+			{
+				return Vector3d(0.6, 0.6, 0.6);
+			}
+		}
+		else
+		{
+			if (sin(z * acos(-1) / 100.0) > 0)
+			{
+				return Vector3d(0.6, 0.6, 0.6);
+			}
+			else
+			{
+				return Vector3d(1.0, 1.0, 0.7);
+			}
+		}
 	}
 };
 
@@ -168,9 +193,24 @@ void getPixelColor(double x, double y, Vector3d& colorVec) {
 
 	if (t_sphere > 0) { // 球との交点がある
 		// ★前回の課題を参考に、球体の表面の色を計算で求め、colorVecに設定する
-		double r = 0;
-		double g = 0;
-		double b = 0;
+		double Is = 0; // 鏡面反射光
+		double Id = 0; // 拡散反射光
+
+		// Is および Id の値を計算する
+		Vector3d N = (viewPosition + t_sphere * ray) - sphere.center; // (交点)-(円の中心)=(法線ベクトル)
+		N.normalize();
+		double cosAlpha = (-lightDirection * N);
+		Id = cosAlpha > 0 ? Iin * Kd * cosAlpha : 0;
+
+		double a = cosAlpha; // a=-L*NであるのでcosAlphaの値を利用
+		Vector3d R = lightDirection + 2 * a * N; // 反射方向
+		double cosGamma = -ray * R; // (視点方向)*(反射方向)
+		Is = cosAlpha > 0 && cosGamma > 0 ? Iin * Ks * pow(cosGamma, 5) : 0; // 「光源からの光が球に届いていて、かつ鏡面反射光が視点に届くとき」以外は0
+
+		double I = Id + Is + Ia;
+		double r = std::min(I * sphere.cR, 1.0);
+		double g = std::min(I * sphere.cG, 1.0);
+		double b = std::min(I * sphere.cB, 1.0);
 		colorVec.set(r, g, b);
 		return;
 	}
@@ -181,9 +221,26 @@ void getPixelColor(double x, double y, Vector3d& colorVec) {
 	if (t_board > 0) { // 床との交点がある
 		// ★床の表面の色を設定する
 		// ★球の影になる場合は、RGBの値をそれぞれ0.5倍する
-		double r = 0;
-		double g = 0;
-		double b = 0;
+		Vector3d intersec = (viewPosition + t_board * ray);
+		Vector3d color = board.getColorVec(intersec.x, intersec.z);
+
+		double r;
+		double g;
+		double b;
+		Vector3d invLightDirection = -lightDirection;
+		if (sphere.getIntersec(intersec, invLightDirection) > 0) // 球が光を遮るときにintersec+t*invLightDirectionとの交点が存在する
+		{
+			color = 0.5 * color;
+			r = color.x;
+			g = color.y;
+			b = color.z;
+		}
+		else 
+		{
+			r = color.x;
+			g = color.y;
+			b = color.z;
+		}
 		colorVec.set(r, g, b);
 		return;
 	}
@@ -201,13 +258,29 @@ void display(void) {
 	for (int y = (-halfHeight); y <= halfHeight; y++) {
 		for (int x = (-halfWidth); x <= halfWidth; x++) {
 
-			Vector3d colorVec;
+			Vector3d colorVec[9];
 
-			// x, y 座標の色を取得する
-			getPixelColor(x, y, colorVec);
+			// 9分割したピクセルでの色を求める
+			for (int i = 0; i < 3; i++)
+			{
+				for (int j = 0; j < 3; j++)
+				{
+					// x, y 座標の色を取得する
+					getPixelColor(x + i / 3.0, y + j / 3.0, colorVec[3 * i + j]);
+				}
+			}
+			
+			Vector3d colorAvg(0, 0, 0);
+
+			// 平均を計算
+			for (int i = 0; i < 9; i++)
+			{
+				colorAvg += colorVec[i];
+			}
+			colorAvg = colorAvg / 9.0;
 
 			//取得した色で、描画色を設定する
-			glColor3d(colorVec.x, colorVec.y, colorVec.z);
+			glColor3d(colorAvg.x, colorAvg.y, colorAvg.z);
 
 			// (x, y) の画素を描画
 			glBegin(GL_POINTS);
